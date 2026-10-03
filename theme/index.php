@@ -4,7 +4,7 @@
  *
  * @package BlueDoc
  * @author BlueDoc
- * @version 0.3.0
+ * @version 0.3.1
  * @link https://github.com/zzlbz/Bluedoc
  */
 if (!defined('__TYPECHO_ROOT_DIR__')) {
@@ -32,13 +32,23 @@ $this->need('header.php');
         <div class="home-section-heading"><div><p class="eyebrow"><?php _e('快速开始'); ?></p><h2 id="quick-title"><?php _e('选择你的设备'); ?></h2></div><p><?php _e('找到对应平台的安装与配置教程。'); ?></p></div>
         <div class="quick-grid">
             <?php foreach (bluedocPlatforms() as $key => $platform):
-                $category = bluedocQuickCategory($blueDocData, $platform['name'], $this->options->{'bluedocQuick' . $key . 'Mid'});
-                $tag = $category ? 'a' : 'div'; ?>
-                <<?php echo $tag; ?> class="quick-card<?php echo $category ? '' : ' is-unavailable'; ?>" data-platform="<?php echo $platform['name']; ?>"<?php if ($category): ?> href="<?php echo bluedocEscape($category['permalink']); ?>"<?php endif; ?>>
-                    <span class="platform-mark"><?php bluedocIcon($platform['icon']); ?></span>
-                    <span><strong><?php echo $platform['name']; ?></strong><small><?php echo $category ? _t($platform['description']) : _t('教程准备中'); ?></small></span>
-                    <?php if ($category): ?><span class="card-arrow" aria-hidden="true">↗</span><?php endif; ?>
-                </<?php echo $tag; ?>>
+                $card = bluedocDeviceCard($blueDocData, $platform['name'], $this->options->{'bluedocQuick' . $key . 'Mid'});
+                $category = $card['category']; $tag = $category ? 'a' : 'div'; ?>
+                <article class="quick-card<?php echo $category ? '' : ' is-unavailable'; ?>" data-platform="<?php echo $platform['name']; ?>"<?php if ($category): ?> data-platform-mid="<?php echo $category['mid']; ?>"<?php endif; ?>>
+                    <<?php echo $tag; ?> class="quick-card-heading"<?php if ($category): ?> href="<?php echo bluedocEscape($category['permalink']); ?>"<?php endif; ?>>
+                        <span class="platform-mark"><?php bluedocIcon($platform['icon']); ?></span>
+                        <strong><?php echo bluedocEscape($card['name']); ?></strong>
+                        <?php if ($category): ?><span class="card-arrow" aria-hidden="true">↗</span><?php endif; ?>
+                    </<?php echo $tag; ?>>
+                    <?php if ($card['description'] !== ''): ?><p class="quick-description"><?php echo bluedocEscape($card['description']); ?></p><?php endif; ?>
+                    <?php if ($card['documents']): ?>
+                        <ul class="quick-documents" aria-label="<?php echo bluedocEscape(sprintf(_t('%s 最新教程'), $card['name'])); ?>">
+                            <?php foreach ($card['documents'] as $document): ?>
+                                <li><a data-device-cid="<?php echo $document['cid']; ?>" href="<?php echo bluedocEscape($document['permalink']); ?>"><?php echo bluedocEscape($document['title']); ?></a></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php else: ?><small><?php _e('教程准备中'); ?></small><?php endif; ?>
+                </article>
             <?php endforeach; ?>
         </div>
     </section>

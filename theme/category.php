@@ -8,6 +8,8 @@ if (!$blueDocCategory) {
     $this->need('archive.php');
     return;
 }
+$blueDocCategoryDocuments = bluedocCategoryDocuments($blueDocData, $blueDocCategory['mid']);
+$blueDocParentCategory = $blueDocData['categories'][$blueDocCategory['parent']] ?? null;
 $this->need('header.php');
 ?>
 <div class="document-shell category-shell">
@@ -21,6 +23,7 @@ $this->need('header.php');
                 <h1 id="category-title"><?php echo bluedocEscape($blueDocCategory['name']); ?></h1>
                 <p class="section-description"><?php echo bluedocEscape($blueDocCategory['description'] ?: (bluedocTopicForCategory($blueDocCategory)['description'] ?? _t('选择下方分类或文档，继续阅读。'))); ?></p>
                 <p class="category-count"><?php echo bluedocEscape(sprintf(_t('共 %d 篇文档，包含子分类'), bluedocCategoryCount($blueDocData, $blueDocCategory['mid']))); ?></p>
+                <?php if ($blueDocParentCategory): ?><a class="back-link" href="<?php echo bluedocEscape($blueDocParentCategory['permalink']); ?>"><?php echo bluedocEscape(sprintf(_t('返回父分类：%s'), $blueDocParentCategory['name'])); ?></a><?php endif; ?>
             </header>
             <?php if (!empty($blueDocData['children'][$blueDocCategory['mid']])): ?>
                 <section aria-labelledby="subcategories-title">
@@ -35,12 +38,12 @@ $this->need('header.php');
                     </div>
                 </section>
             <?php endif; ?>
-            <?php if ($blueDocCategory['posts']): ?>
+            <?php if ($blueDocCategoryDocuments): ?>
                 <section class="category-documents" aria-labelledby="category-documents-title">
-                    <h2 id="category-documents-title"><?php _e('本分类文档'); ?></h2>
+                    <h2 id="category-documents-title"><?php _e('全部文档'); ?></h2>
                     <ul class="guide-list">
-                        <?php foreach ($blueDocCategory['posts'] as $cid): $document = $blueDocData['documents'][$cid]; ?>
-                            <li><a href="<?php echo bluedocEscape($document['permalink']); ?>" data-guide-cid="<?php echo $cid; ?>"><span><?php echo bluedocEscape($document['title']); ?></span><span aria-hidden="true">→</span></a></li>
+                        <?php foreach ($blueDocCategoryDocuments as $document): $path = bluedocPrimaryPath($blueDocData, $document['categoryIds']); ?>
+                            <li><a href="<?php echo bluedocEscape($document['permalink']); ?>" data-guide-cid="<?php echo $document['cid']; ?>"><span><?php echo bluedocEscape($document['title']); ?><?php if ($path): ?><small class="guide-category"><?php echo bluedocEscape($path[count($path) - 1]['name']); ?></small><?php endif; ?></span><span aria-hidden="true">→</span></a></li>
                         <?php endforeach; ?>
                     </ul>
                 </section>

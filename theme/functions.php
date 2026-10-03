@@ -2,7 +2,7 @@
 if (!defined('__TYPECHO_ROOT_DIR__')) {
     exit;
 }
-define('BLUEDOC_VERSION', '0.3.0');
+define('BLUEDOC_VERSION', '0.3.1');
 
 /**
  * Typecho 原生主题配置入口。
@@ -29,7 +29,7 @@ function themeConfig(\Typecho\Widget\Helper\Form $form): void
         $label = $platform['name'];
         $input = new \Typecho\Widget\Helper\Form\Element\Text(
             'bluedocQuick' . $key . 'Mid', null, '', sprintf(_t('%s 快速开始分类 MID'), $label),
-            _t('可选：填写分类 MID。留空或分类不存在时自动匹配对应平台的分类名称或缩略名；尚未创建分类时显示未发布提示。')
+            _t('填写设备分类 MID，卡片读取真实分类名称、描述及该分支最新三篇公开文章（包含子分类）。留空时自动匹配平台分类；指定 ID 不存在时显示准备中，不跳转到其他分类。')
         );
         $input->addRule(function ($value) {
             return trim((string) $value) === '' || preg_match('/^[1-9][0-9]*$/D', trim((string) $value));

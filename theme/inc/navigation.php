@@ -61,6 +61,7 @@ function bluedocDocumentData(): array
         $data['documents'][$cid] = [
             'cid' => $cid, 'title' => (string) $documents->title,
             'permalink' => (string) $documents->permalink,
+            'created' => (int) $documents->created,
             'modified' => (int) ($documents->modified ?: $documents->created),
             'categoryIds' => array_column($postCategories, 'mid'),
         ];
@@ -126,11 +127,58 @@ function bluedocCategoryCount(array $data, int $mid): int
     return count($posts);
 }
 
+/** 分类文章池：可包含所有后代，按公开索引的 created/CID 倒序，跨分类去重。 */
+function bluedocCategoryDocuments(array $data, int $mid, bool $includeDescendants = true, int $limit = 0): array
+{
+    $pending = [$mid];
+    $seen = [];
+    $assigned = [];
+    while ($pending) {
+        $id = array_pop($pending);
+        if (isset($seen[$id]) || !isset($data['categories'][$id])) {
+            continue;
+        }
+        $seen[$id] = true;
+        foreach ($data['categories'][$id]['posts'] as $cid) {
+            $assigned[$cid] = true;
+        }
+        if ($includeDescendants) {
+            array_push($pending, ...($data['children'][$id] ?? []));
+        }
+    }
+    $documents = [];
+    foreach ($data['documents'] as $cid => $document) {
+        if (isset($assigned[$cid])) {
+            $documents[] = $document;
+            if ($limit > 0 && count($documents) >= $limit) {
+                break;
+            }
+        }
+    }
+    return $documents;
+}
+
+/** 仅选取当前位置关联的顶级分支，顺序仍遵循 Typecho 后台。 */
+function bluedocNavigationRoots(array $data, array $categoryIds): array
+{
+    $selected = [];
+    foreach ($categoryIds as $mid) {
+        $path = bluedocCategoryPath($data, (int) $mid);
+        if ($path) {
+            $selected[$path[0]['mid']] = true;
+        }
+    }
+    return array_values(array_filter($data['children'][0] ?? [], fn ($mid) => isset($selected[$mid])));
+}
+
 function bluedocQuickCategory(array $data, string $platform, ?string $configuredMid): ?array
 {
     $mid = (int) ($configuredMid ?? 0);
     if (isset($data['categories'][$mid])) {
         return $data['categories'][$mid];
+    }
+    if (trim($configuredMid ?? '') !== '') {
+        return null; // 明确指定但不存在的 MID 不应悄悄跳到同名分类。
     }
     $aliases = match ($platform) {
         'iOS' => ['iOS', 'iOS / iPadOS', 'iPhone / iPad', 'iPhone', 'iPadOS'],

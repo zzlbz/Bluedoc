@@ -1,4 +1,4 @@
-/* BlueDoc 0.3.0 — 帮助中心、分类浏览与三栏阅读；无需外部字体或样式框架。 */
+/* BlueDoc 0.3.1 — 帮助中心、分类浏览与三栏阅读；无需外部字体或样式框架。 */
 :root {
     color-scheme: light;
     --color-primary: #245cde;
@@ -64,11 +64,15 @@ h2 { font-size: 23px; }
 .quick-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
 .category-grid, .popular-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
 .quick-card, .category-card, .popular-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; color: var(--color-text); }
-a.quick-card:hover, .category-card:focus-within, .popular-card:hover { border-color: #97b5f3; text-decoration: none; }
-.quick-card { display: flex; align-items: start; position: relative; gap: 12px; padding: 22px 16px; }
-.quick-card strong, .quick-card small { display: block; }
+.quick-card:focus-within, .category-card:focus-within, .popular-card:hover { border-color: #97b5f3; }
+.quick-card { display: flex; flex-direction: column; position: relative; gap: 12px; padding: 22px 16px; }
+.quick-card-heading { display: flex; align-items: center; gap: 12px; color: var(--color-text); }
+.quick-card-heading strong { min-width: 0; }
 .quick-card strong { font-size: 17px; }
 .quick-card small { color: var(--color-muted); font-size: 12px; margin-top: 4px; }
+.quick-description { margin: 0; color: var(--color-muted); font-size: 12px; }
+.quick-documents { list-style: none; padding: 10px 0 0; margin: 0; border-top: 1px solid var(--color-border); }
+.quick-documents a { display: block; padding: 5px 0; font-size: 13px; color: #496181; }
 .platform-mark { display: grid; place-items: center; flex: 0 0 40px; height: 40px; border-radius: 10px; background: #eef3ff; color: var(--color-primary); }
 .quick-card .card-arrow { position: absolute; top: 7px; right: 10px; font-size: 13px; }
 .is-unavailable { background: #f1f4f9; }
@@ -95,6 +99,7 @@ a.quick-card:hover, .category-card:focus-within, .popular-card:hover { border-co
 .sidebar-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .sidebar-heading h2, .document-toc h2 { font-size: 12px; color: var(--color-muted); margin: 0; font-weight: 600; }
 .tree-home { display: block; margin-bottom: 14px; padding: 7px 10px; font-size: 13px; }
+.tree-all { margin-top: 20px; border-top: 1px solid var(--color-border); padding-top: 16px; }
 .tree-category { margin: 3px 0; }
 .tree-category > summary { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: 7px; font-size: 13px; cursor: pointer; list-style: none; }
 .tree-category > summary > span:first-child { min-width: 0; }
@@ -151,6 +156,7 @@ a.quick-card:hover, .category-card:focus-within, .popular-card:hover { border-co
 .guide-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--color-border); }
 .guide-list a { display: flex; justify-content: space-between; gap: 16px; padding: 16px 4px; color: var(--color-text); border-bottom: 1px solid var(--color-border); }
 .guide-list a:hover { color: var(--color-primary); }
+.guide-category { display: block; color: var(--color-muted); font-size: 12px; margin-top: 4px; }
 .document-list { display: grid; gap: 0; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; }
 .document-card { padding: 20px 24px; }
 .document-card + .document-card { border-top: 1px solid var(--color-border); }
@@ -169,7 +175,6 @@ a.quick-card:hover, .category-card:focus-within, .popular-card:hover { border-co
     .document-shell { grid-template-columns: 216px minmax(0, 1fr) 156px; gap: 20px; }
     .category-shell { grid-template-columns: 216px minmax(0, 1fr); }
     .document, .category-overview { padding: 24px; }
-    .quick-card { flex-direction: column; }
 }
 @media (max-width: 1023px) {
     .document-toc { display: none; }
@@ -189,7 +194,6 @@ a.quick-card:hover, .category-card:focus-within, .popular-card:hover { border-co
     .drawer-backdrop { display: block; position: fixed; inset: 0; z-index: 35; padding: 0; border: 0; border-radius: 0; background: #17203370; }
     .drawer-backdrop:hover { background: #17203370; }
     .quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .quick-card { flex-direction: row; }
     .home-section-heading { display: block; }
     .home-section-heading > p { margin-top: 8px; }
     .home-hero { padding: 40px 0 20px; }

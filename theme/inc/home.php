@@ -3,14 +3,26 @@ if (!defined('__TYPECHO_ROOT_DIR__')) {
     exit;
 }
 
-/** 平台入口定义与文案集中维护；分类和链接仍来自 Typecho。 */
+/** 固定设备槽位和图标；卡片标题、描述与文章来自指定的原生分类。 */
 function bluedocPlatforms(): array
 {
     return [
-        'Windows' => ['name' => 'Windows', 'description' => '安装客户端，完成首次配置。', 'icon' => 'windows'],
-        'Android' => ['name' => 'Android', 'description' => '下载应用，导入并更新订阅。', 'icon' => 'android'],
-        'Ios' => ['name' => 'iOS', 'description' => '查看 iPhone 与 iPad 使用指南。', 'icon' => 'phone'],
-        'Macos' => ['name' => 'macOS', 'description' => '选择适合 Mac 的客户端。', 'icon' => 'desktop'],
+        'Windows' => ['name' => 'Windows', 'icon' => 'windows'],
+        'Android' => ['name' => 'Android', 'icon' => 'android'],
+        'Ios' => ['name' => 'iOS', 'icon' => 'phone'],
+        'Macos' => ['name' => 'macOS', 'icon' => 'desktop'],
+    ];
+}
+
+/** 按 MID 解析设备分类，再读取该分支（含子分类）最新三篇公开文章。 */
+function bluedocDeviceCard(array $data, string $platform, ?string $configuredMid): array
+{
+    $category = bluedocQuickCategory($data, $platform, $configuredMid);
+    return [
+        'category' => $category,
+        'name' => $category['name'] ?? $platform,
+        'description' => $category['description'] ?? '',
+        'documents' => $category ? bluedocCategoryDocuments($data, $category['mid'], true, 3) : [],
     ];
 }
 
