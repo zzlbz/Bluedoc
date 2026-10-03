@@ -2,17 +2,4 @@
 if (!defined('__TYPECHO_ROOT_DIR__')) {
     exit;
 }
-
-$this->need('header.php');
-?>
-<main id="main" class="site-main" tabindex="-1">
-    <article class="document">
-        <header class="section-header">
-            <a class="back-link" href="<?php $this->options->siteUrl(); ?>"><?php _e('返回文档中心'); ?></a>
-            <h1><?php echo bluedocEscape($this->title); ?></h1>
-        </header>
-        <div class="document-content"><?php $this->content(); ?></div>
-    </article>
-    <?php $this->need('comments.php'); ?>
-</main>
-<?php $this->need('footer.php'); ?>
+$this->need('partials/document-layout.php');

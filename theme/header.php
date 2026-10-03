@@ -15,7 +15,7 @@ $blueDocArchiveTitle = $this->getArchiveTitle();
     <link rel="stylesheet" href="<?php $this->options->themeUrl('assets/css/style.css'); ?>">
     <?php $this->header(); ?>
 </head>
-<body>
+<body class="<?php echo ($this->is('post') || $this->is('page')) ? 'layout-document' : ($this->is('index') ? 'layout-home' : 'layout-list'); ?>">
 <a class="skip-link" href="#main"><?php _e('跳转到正文'); ?></a>
 <header class="site-header">
     <div class="header-inner">
