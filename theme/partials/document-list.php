@@ -9,10 +9,8 @@ if (!defined('__TYPECHO_ROOT_DIR__')) {
             <article class="document-card">
                 <div class="document-meta">
                     <span><?php $this->category(' / '); ?></span>
-                    <time datetime="<?php $this->date('c'); ?>"><?php $this->date('Y-m-d'); ?></time>
                 </div>
                 <h2><a href="<?php $this->permalink(); ?>"><?php echo bluedocEscape($this->title); ?></a></h2>
-                <p class="document-excerpt"><?php $this->excerpt(140); ?></p>
                 <a class="read-link" href="<?php $this->permalink(); ?>"><?php _e('阅读文档'); ?><span class="sr-only">：<?php echo bluedocEscape($this->title); ?></span> <span aria-hidden="true">→</span></a>
             </article>
         <?php endwhile; ?>

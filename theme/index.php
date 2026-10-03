@@ -1,11 +1,11 @@
 <?php
 /**
- * BlueDoc：支持原生分类层级、文档树与阅读目录的现代文档中心主题。
+ * BlueDoc：以设备入口、原生分类树和三栏阅读组织内容的独立文档中心主题。
  *
  * @package BlueDoc
  * @author BlueDoc
- * @version 0.2.0
- * @link https://typecho.org
+ * @version 0.3.0
+ * @link https://github.com/zzlbz/Bluedoc
  */
 if (!defined('__TYPECHO_ROOT_DIR__')) {
     exit;
@@ -16,48 +16,58 @@ $this->need('header.php');
 ?>
 <main id="main" class="site-main home-main" tabindex="-1">
     <section class="home-hero" aria-labelledby="hero-title">
-        <p class="eyebrow"><?php _e('文档与帮助中心'); ?></p>
-        <h1 id="hero-title"><?php echo bluedocEscape($this->options->title); ?></h1>
-        <p class="hero-description"><?php echo bluedocEscape($this->options->description ?: _t('从入门到熟练，在这里找到你需要的指南。')); ?></p>
+        <p class="eyebrow"><?php _e('帮助与指南'); ?></p>
+        <h1 id="hero-title"><?php echo bluedocEscape($this->options->bluedocHomeTitle ?: $this->options->title); ?></h1>
+        <p class="hero-description"><?php echo bluedocEscape($this->options->bluedocHomeDescription ?: ($this->options->description ?: _t('从安装到配置，找到适合你的使用指南。'))); ?></p>
         <form class="hero-search" method="get" action="<?php $this->options->siteUrl(); ?>" role="search">
+            <span class="search-icon"><?php bluedocIcon('search'); ?></span>
             <label class="sr-only" for="hero-search-input"><?php _e('搜索帮助文档'); ?></label>
-            <input id="hero-search-input" name="s" type="search" placeholder="<?php _e('搜索教程、平台或常见问题…'); ?>" required>
+            <input id="hero-search-input" name="s" type="search" placeholder="<?php _e('输入问题、客户端或教程名称…'); ?>" required>
             <button type="submit"><?php _e('搜索文档'); ?></button>
         </form>
+        <p class="hero-hint"><?php _e('也可以选择设备，或按下方分类浏览。'); ?></p>
     </section>
 
     <section class="home-section" aria-labelledby="quick-title">
-        <div class="home-section-heading"><h2 id="quick-title"><?php _e('快速开始'); ?></h2><p><?php _e('选择你的设备，开始使用。'); ?></p></div>
+        <div class="home-section-heading"><div><p class="eyebrow"><?php _e('快速开始'); ?></p><h2 id="quick-title"><?php _e('选择你的设备'); ?></h2></div><p><?php _e('找到对应平台的安装与配置教程。'); ?></p></div>
         <div class="quick-grid">
-            <?php foreach (['Windows' => 'Windows', 'Android' => 'Android', 'Ios' => 'iOS'] as $key => $platform):
-                $category = bluedocQuickCategory($blueDocData, $platform, $this->options->{'bluedocQuick' . $key . 'Mid'});
+            <?php foreach (bluedocPlatforms() as $key => $platform):
+                $category = bluedocQuickCategory($blueDocData, $platform['name'], $this->options->{'bluedocQuick' . $key . 'Mid'});
                 $tag = $category ? 'a' : 'div'; ?>
-                <<?php echo $tag; ?> class="quick-card<?php echo $category ? '' : ' is-unavailable'; ?>"<?php if ($category): ?> href="<?php echo bluedocEscape($category['permalink']); ?>"<?php endif; ?>>
-                    <span class="platform-mark" aria-hidden="true"><?php echo $key === 'Ios' ? 'i' : substr($key, 0, 1); ?></span>
-                    <span><strong><?php echo $platform; ?></strong><small><?php echo $category ? _t('查看使用教程') : _t('教程尚未发布'); ?></small></span>
-                    <?php if ($category): ?><span class="card-arrow" aria-hidden="true">→</span><?php endif; ?>
+                <<?php echo $tag; ?> class="quick-card<?php echo $category ? '' : ' is-unavailable'; ?>" data-platform="<?php echo $platform['name']; ?>"<?php if ($category): ?> href="<?php echo bluedocEscape($category['permalink']); ?>"<?php endif; ?>>
+                    <span class="platform-mark"><?php bluedocIcon($platform['icon']); ?></span>
+                    <span><strong><?php echo $platform['name']; ?></strong><small><?php echo $category ? _t($platform['description']) : _t('教程准备中'); ?></small></span>
+                    <?php if ($category): ?><span class="card-arrow" aria-hidden="true">↗</span><?php endif; ?>
                 </<?php echo $tag; ?>>
             <?php endforeach; ?>
         </div>
     </section>
 
     <section class="home-section" aria-labelledby="categories-title">
-        <div class="home-section-heading"><h2 id="categories-title"><?php _e('文档分类'); ?></h2><p><?php _e('按主题浏览全部指南。'); ?></p></div>
+        <div class="home-section-heading"><div><p class="eyebrow"><?php _e('文档分类'); ?></p><h2 id="categories-title"><?php _e('你想了解什么？'); ?></h2></div><p><?php _e('从入门、配置到解决问题，按主题查找。'); ?></p></div>
         <div class="category-grid">
-            <?php foreach ($blueDocData['children'][0] ?? [] as $mid): $category = $blueDocData['categories'][$mid]; ?>
-                <a class="category-card" href="<?php echo bluedocEscape($category['permalink']); ?>">
-                    <span class="category-card-top"><span class="category-symbol" aria-hidden="true">▤</span><span class="card-arrow" aria-hidden="true">→</span></span>
-                    <h3><?php echo bluedocEscape($category['name']); ?></h3>
-                    <p><?php echo bluedocEscape($category['description'] ?: _t('查看相关指南与教程。')); ?></p>
-                    <small><?php echo bluedocEscape(sprintf(_t('%d 篇文档'), bluedocCategoryCount($blueDocData, $mid))); ?></small>
-                </a>
+            <?php foreach (bluedocHomeCategories($blueDocData) as $card): $category = $card['category']; ?>
+                <article class="category-card<?php echo $category ? '' : ' is-unavailable'; ?>">
+                    <span class="category-symbol"><?php bluedocIcon($card['icon']); ?></span>
+                    <h3><?php if ($category): ?><a href="<?php echo bluedocEscape($category['permalink']); ?>"><?php endif; ?><?php echo bluedocEscape($card['name']); ?><?php if ($category): ?></a><?php endif; ?></h3>
+                    <p><?php echo bluedocEscape(_t($card['description'])); ?></p>
+                    <?php if ($category): ?>
+                        <?php if (!empty($blueDocData['children'][$category['mid']])): ?>
+                            <ul class="category-children">
+                                <?php foreach ($blueDocData['children'][$category['mid']] as $mid): $child = $blueDocData['categories'][$mid]; ?>
+                                    <li><a href="<?php echo bluedocEscape($child['permalink']); ?>"><?php echo bluedocEscape($child['name']); ?><span aria-hidden="true">›</span></a></li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php endif; ?>
+                        <a class="category-card-footer" href="<?php echo bluedocEscape($category['permalink']); ?>"><?php echo bluedocEscape(sprintf(_t('浏览 %d 篇文档'), bluedocCategoryCount($blueDocData, $category['mid']))); ?><span aria-hidden="true">→</span><span class="sr-only">：<?php echo bluedocEscape($category['name']); ?></span></a>
+                    <?php else: ?><small><?php _e('文档准备中'); ?></small><?php endif; ?>
+                </article>
             <?php endforeach; ?>
         </div>
-        <?php if (empty($blueDocData['children'][0])): ?><p class="empty-state"><?php _e('文档分类准备中。'); ?></p><?php endif; ?>
     </section>
 
     <section class="home-section" aria-labelledby="popular-title">
-        <div class="home-section-heading"><h2 id="popular-title"><?php _e('热门教程'); ?></h2><p><?php _e('值得先读的使用指南。'); ?></p></div>
+        <div class="home-section-heading"><div><p class="eyebrow"><?php _e('推荐阅读'); ?></p><h2 id="popular-title"><?php _e('热门教程'); ?></h2></div><p><?php _e('从这些指南开始。'); ?></p></div>
         <div class="popular-grid">
             <?php foreach ($blueDocPopular as $document): $path = bluedocPrimaryPath($blueDocData, $document['categoryIds']); ?>
                 <a class="popular-card" data-popular-cid="<?php echo $document['cid']; ?>" href="<?php echo bluedocEscape($document['permalink']); ?>">
@@ -67,7 +77,7 @@ $this->need('header.php');
                 </a>
             <?php endforeach; ?>
         </div>
-        <?php if (!$blueDocPopular): ?><p class="empty-state"><?php _e('教程准备中，发布文章后会自动展示。'); ?></p><?php endif; ?>
+        <?php if (!$blueDocPopular): ?><p class="empty-state"><?php _e('教程准备中。'); ?></p><?php endif; ?>
     </section>
 </main>
 <?php $this->need('footer.php'); ?>

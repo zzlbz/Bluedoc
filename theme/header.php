@@ -12,10 +12,11 @@ $blueDocArchiveTitle = $this->getArchiveTitle();
     <meta charset="<?php echo bluedocEscape($this->options->charset); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?php if ($blueDocArchiveTitle): ?><?php echo bluedocEscape($blueDocArchiveTitle); ?> - <?php endif; ?><?php echo bluedocEscape($this->options->title); ?></title>
-    <link rel="stylesheet" href="<?php $this->options->themeUrl('assets/css/style.css'); ?>">
+    <link rel="stylesheet" href="<?php $this->options->themeUrl('assets/css/style.css'); ?>?v=<?php echo BLUEDOC_VERSION; ?>">
+    <meta name="bluedoc-version" content="<?php echo BLUEDOC_VERSION; ?>">
     <?php $this->header(); ?>
 </head>
-<body class="<?php echo ($this->is('post') || $this->is('page')) ? 'layout-document' : ($this->is('index') ? 'layout-home' : 'layout-list'); ?>">
+<body class="<?php echo ($this->is('post') || $this->is('page') || $this->is('category')) ? 'layout-document' : ($this->is('index') ? 'layout-home' : 'layout-list'); ?>">
 <a class="skip-link" href="#main"><?php _e('跳转到正文'); ?></a>
 <header class="site-header">
     <div class="header-inner">
@@ -31,6 +32,7 @@ $blueDocArchiveTitle = $this->getArchiveTitle();
     </div>
     <nav class="site-nav" aria-label="<?php _e('主导航'); ?>">
         <a href="<?php $this->options->siteUrl(); ?>"<?php if ($this->is('index')): ?> aria-current="page"<?php endif; ?>><?php _e('文档首页'); ?></a>
+        <a href="<?php $this->options->siteUrl(); ?>#categories-title"><?php _e('浏览分类'); ?></a>
         <?php \Widget\Contents\Page\Rows::alloc()->to($blueDocPages); ?>
         <?php while ($blueDocPages->next()): ?>
             <a href="<?php $blueDocPages->permalink(); ?>"<?php if ($this->is('page', $blueDocPages->slug) && !$this->is('index')): ?> aria-current="page"<?php endif; ?>><?php echo bluedocEscape($blueDocPages->title); ?></a>

@@ -24,7 +24,6 @@ $this->need('header.php');
             </header>
             <div class="document-content" data-document-content><?php $this->content(); ?></div>
         </article>
-        <?php $this->need('comments.php'); ?>
     </main>
     <?php $this->need('partials/toc.php'); ?>
 </div>

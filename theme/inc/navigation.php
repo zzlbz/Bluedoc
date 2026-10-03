@@ -132,8 +132,32 @@ function bluedocQuickCategory(array $data, string $platform, ?string $configured
     if (isset($data['categories'][$mid])) {
         return $data['categories'][$mid];
     }
+    $aliases = match ($platform) {
+        'iOS' => ['iOS', 'iOS / iPadOS', 'iPhone / iPad', 'iPhone', 'iPadOS'],
+        'macOS' => ['macOS', 'Mac', 'OS X'],
+        default => [$platform],
+    };
+    $fallback = null;
     foreach ($data['categories'] as $category) {
-        if (strcasecmp($category['name'], $platform) === 0 || strcasecmp($category['slug'], $platform) === 0) {
+        if (!bluedocCategoryMatches($category, $aliases)) {
+            continue;
+        }
+        $fallback ??= $category;
+        // 同名平台优先使用客户端教程分支，避免误入软件下载分类。
+        foreach (bluedocCategoryPath($data, $category['mid']) as $ancestor) {
+            if (bluedocCategoryMatches($ancestor, bluedocTopics()['clients']['aliases'])) {
+                return $category;
+            }
+        }
+    }
+    return $fallback;
+}
+
+/** Typecho 已校验原生分类路由；以其 slug 找到同一导航节点。 */
+function bluedocCurrentCategory(array $data, ?string $slug): ?array
+{
+    foreach ($data['categories'] as $category) {
+        if ($category['slug'] === $slug) {
             return $category;
         }
     }
@@ -153,7 +177,7 @@ function bluedocPopularDocuments(array $data, ?string $configuredCids): array
 }
 
 /** details/summary 无需脚本也能折叠任意深度的分类。 */
-function bluedocRenderTree(array $data, int $parent, array $active, int $currentCid, array $seen = []): void
+function bluedocRenderTree(array $data, int $parent, array $active, int $currentCid, int $currentMid = 0, array $seen = []): void
 {
     foreach ($data['children'][$parent] ?? [] as $mid) {
         if (isset($seen[$mid])) {
@@ -165,7 +189,8 @@ function bluedocRenderTree(array $data, int $parent, array $active, int $current
         <details class="tree-category<?php echo isset($active[$mid]) ? ' is-active-branch' : ''; ?>" data-category-mid="<?php echo $mid; ?>"<?php echo isset($active[$mid]) ? ' open' : ''; ?>>
             <summary><span><?php echo bluedocEscape($category['name']); ?></span><span class="tree-chevron" aria-hidden="true">›</span></summary>
             <div class="tree-branch">
-                <a class="tree-overview" href="<?php echo bluedocEscape($category['permalink']); ?>"><?php _e('分类概览'); ?><span class="sr-only">：<?php echo bluedocEscape($category['name']); ?></span></a>
+                <a class="tree-overview<?php echo $mid === $currentMid ? ' is-current' : ''; ?>" href="<?php echo bluedocEscape($category['permalink']); ?>"<?php echo $mid === $currentMid ? ' aria-current="page"' : ''; ?>><?php _e('分类概览'); ?><span class="sr-only">：<?php echo bluedocEscape($category['name']); ?></span></a>
+                <?php bluedocRenderTree($data, $mid, $active, $currentCid, $currentMid, $branchSeen); ?>
                 <?php if ($category['posts']): ?>
                     <ul class="tree-posts">
                         <?php foreach ($category['posts'] as $cid): $document = $data['documents'][$cid]; ?>
@@ -173,7 +198,6 @@ function bluedocRenderTree(array $data, int $parent, array $active, int $current
                         <?php endforeach; ?>
                     </ul>
                 <?php endif; ?>
-                <?php bluedocRenderTree($data, $mid, $active, $currentCid, $branchSeen); ?>
                 <?php if (!$category['posts'] && empty($data['children'][$mid])): ?>
                     <p class="tree-empty"><?php _e('暂无公开文档'); ?></p>
                 <?php endif; ?>
