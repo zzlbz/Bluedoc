@@ -25,7 +25,6 @@ node --check theme/assets/js/main.js
 node tests/typecho-smoke.mjs
 ```
 
-HTTP 检查需要已经安装并启用 V0.3.2 的隔离测试站，默认地址为 `http://127.0.0.1:18230/`，可用 `BLUEDOC_BASE_URL` 配置。主题运行不需要 Node.js。
 
 ![通用首页预览：隔离测试数据](demo/v0.3.2-home.png)
 
