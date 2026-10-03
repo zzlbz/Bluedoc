@@ -21,7 +21,7 @@ $this->need('header.php');
             <header class="section-header">
                 <p class="eyebrow"><?php _e('浏览文档'); ?></p>
                 <h1 id="category-title"><?php echo bluedocEscape($blueDocCategory['name']); ?></h1>
-                <p class="section-description"><?php echo bluedocEscape($blueDocCategory['description'] ?: (bluedocTopicForCategory($blueDocCategory)['description'] ?? _t('选择下方分类或文档，继续阅读。'))); ?></p>
+                <p class="section-description"><?php echo bluedocEscape($blueDocCategory['description'] ?: _t('选择下方分类或文档，继续阅读。')); ?></p>
                 <p class="category-count"><?php echo bluedocEscape(sprintf(_t('共 %d 篇文档，包含子分类'), bluedocCategoryCount($blueDocData, $blueDocCategory['mid']))); ?></p>
                 <?php if ($blueDocParentCategory): ?><a class="back-link" href="<?php echo bluedocEscape($blueDocParentCategory['permalink']); ?>"><?php echo bluedocEscape(sprintf(_t('返回父分类：%s'), $blueDocParentCategory['name'])); ?></a><?php endif; ?>
             </header>

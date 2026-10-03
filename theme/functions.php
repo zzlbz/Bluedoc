@@ -2,7 +2,7 @@
 if (!defined('__TYPECHO_ROOT_DIR__')) {
     exit;
 }
-define('BLUEDOC_VERSION', '0.3.1');
+define('BLUEDOC_VERSION', '0.3.2');
 
 /**
  * Typecho 原生主题配置入口。
@@ -16,7 +16,7 @@ function themeConfig(\Typecho\Widget\Helper\Form $form): void
         ));
     }
     $popular = new \Typecho\Widget\Helper\Form\Element\Text(
-        'bluedocPopularCids', null, '', _t('热门教程文章 CID'),
+        'bluedocPopularCids', null, '', _t('精选文档文章 CID'),
         _t('最多 12 个正整数 CID，英文逗号分隔，按填写顺序显示。留空或没有可公开展示的文章时显示最新文章；不显示草稿、私密及未到发布时间的文章。')
     );
     $popular->addRule(function ($value) {
@@ -25,17 +25,17 @@ function themeConfig(\Typecho\Widget\Helper\Form $form): void
             && count(explode(',', $value)) <= 12);
     }, _t('请填写最多 12 个正整数 CID，以英文逗号分隔。'));
     $form->addInput($popular);
-    foreach (bluedocPlatforms() as $key => $platform) {
-        $label = $platform['name'];
-        $input = new \Typecho\Widget\Helper\Form\Element\Text(
-            'bluedocQuick' . $key . 'Mid', null, '', sprintf(_t('%s 快速开始分类 MID'), $label),
-            _t('填写设备分类 MID，卡片读取真实分类名称、描述及该分支最新三篇公开文章（包含子分类）。留空时自动匹配平台分类；指定 ID 不存在时显示准备中，不跳转到其他分类。')
-        );
-        $input->addRule(function ($value) {
-            return trim((string) $value) === '' || preg_match('/^[1-9][0-9]*$/D', trim((string) $value));
-        }, _t('分类 MID 必须是正整数或留空。'));
-        $form->addInput($input);
+    $data = bluedocDocumentData();
+    $choices = [0 => _t('自动：展示一级分类')];
+    foreach ($data['categories'] as $mid => $category) {
+        $choices[$mid] = implode(' / ', array_column(bluedocCategoryPath($data, $mid), 'name'));
     }
+    $parent = new \Typecho\Widget\Helper\Form\Element\Select(
+        'bluedocQuickParentMid', $choices, '0', _t('快速导航分类范围'),
+        _t('默认按后台排序展示前四个一级分类。选择父分类后展示其前四个直接子分类，每张卡片读取该分支最新三篇公开文档。父分类删除后恢复默认；没有子分类时显示空状态。')
+    );
+    $parent->addRule(fn ($value) => array_key_exists((string) $value, $choices), _t('请选择有效的分类范围。'));
+    $form->addInput($parent);
 }
 
 /**

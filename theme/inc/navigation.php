@@ -171,36 +171,6 @@ function bluedocNavigationRoots(array $data, array $categoryIds): array
     return array_values(array_filter($data['children'][0] ?? [], fn ($mid) => isset($selected[$mid])));
 }
 
-function bluedocQuickCategory(array $data, string $platform, ?string $configuredMid): ?array
-{
-    $mid = (int) ($configuredMid ?? 0);
-    if (isset($data['categories'][$mid])) {
-        return $data['categories'][$mid];
-    }
-    if (trim($configuredMid ?? '') !== '') {
-        return null; // 明确指定但不存在的 MID 不应悄悄跳到同名分类。
-    }
-    $aliases = match ($platform) {
-        'iOS' => ['iOS', 'iOS / iPadOS', 'iPhone / iPad', 'iPhone', 'iPadOS'],
-        'macOS' => ['macOS', 'Mac', 'OS X'],
-        default => [$platform],
-    };
-    $fallback = null;
-    foreach ($data['categories'] as $category) {
-        if (!bluedocCategoryMatches($category, $aliases)) {
-            continue;
-        }
-        $fallback ??= $category;
-        // 同名平台优先使用客户端教程分支，避免误入软件下载分类。
-        foreach (bluedocCategoryPath($data, $category['mid']) as $ancestor) {
-            if (bluedocCategoryMatches($ancestor, bluedocTopics()['clients']['aliases'])) {
-                return $category;
-            }
-        }
-    }
-    return $fallback;
-}
-
 /** Typecho 已校验原生分类路由；以其 slug 找到同一导航节点。 */
 function bluedocCurrentCategory(array $data, ?string $slug): ?array
 {

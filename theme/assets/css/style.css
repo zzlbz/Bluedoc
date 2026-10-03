@@ -1,4 +1,4 @@
-/* BlueDoc 0.3.1 — 帮助中心、分类浏览与三栏阅读；无需外部字体或样式框架。 */
+/* BlueDoc 0.3.2 — 通用文档中心、分类浏览与三栏阅读；无需外部字体或样式框架。 */
 :root {
     color-scheme: light;
     --color-primary: #245cde;
@@ -61,7 +61,7 @@ h2 { font-size: 23px; }
 .home-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
 .home-section-heading h2 { margin: 6px 0 0; font-size: 24px; }
 .home-section-heading > p { margin: 0; font-size: 13px; color: var(--color-muted); }
-.quick-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.quick-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 14px; }
 .category-grid, .popular-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
 .quick-card, .category-card, .popular-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; color: var(--color-text); }
 .quick-card:focus-within, .category-card:focus-within, .popular-card:hover { border-color: #97b5f3; }
@@ -73,9 +73,8 @@ h2 { font-size: 23px; }
 .quick-description { margin: 0; color: var(--color-muted); font-size: 12px; }
 .quick-documents { list-style: none; padding: 10px 0 0; margin: 0; border-top: 1px solid var(--color-border); }
 .quick-documents a { display: block; padding: 5px 0; font-size: 13px; color: #496181; }
-.platform-mark { display: grid; place-items: center; flex: 0 0 40px; height: 40px; border-radius: 10px; background: #eef3ff; color: var(--color-primary); }
+.entry-mark { display: grid; place-items: center; flex: 0 0 40px; height: 40px; border-radius: 10px; background: #eef3ff; color: var(--color-primary); }
 .quick-card .card-arrow { position: absolute; top: 7px; right: 10px; font-size: 13px; }
-.is-unavailable { background: #f1f4f9; }
 .card-arrow { color: var(--color-primary); }
 .category-card, .popular-card { display: flex; flex-direction: column; padding: 24px; }
 .category-symbol { display: grid; place-items: center; align-self: start; width: 42px; height: 42px; color: var(--color-primary); border-radius: 10px; background: #eff4ff; }
@@ -193,7 +192,7 @@ h2 { font-size: 23px; }
     .drawer-close:hover { background: #edf2fa; }
     .drawer-backdrop { display: block; position: fixed; inset: 0; z-index: 35; padding: 0; border: 0; border-radius: 0; background: #17203370; }
     .drawer-backdrop:hover { background: #17203370; }
-    .quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .quick-grid { grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); }
     .home-section-heading { display: block; }
     .home-section-heading > p { margin-top: 8px; }
     .home-hero { padding: 40px 0 20px; }
