@@ -8,16 +8,13 @@ if (!$blueDocCategory) {
     $this->need('archive.php');
     return;
 }
-$blueDocCategoryDocuments = bluedocCategoryDocuments($blueDocData, $blueDocCategory['mid']);
+$blueDocCategoryDocuments = bluedocReadingDocuments($blueDocData, $blueDocCategory['mid']);
 $blueDocParentCategory = $blueDocData['categories'][$blueDocCategory['parent']] ?? null;
 $this->need('header.php');
 ?>
 <div class="document-shell category-shell">
-    <?php $this->need('partials/document-tree.php'); ?>
     <main id="main" class="site-main document-main" tabindex="-1">
-        <button class="drawer-toggle" type="button" aria-controls="bluedoc-sidebar" aria-expanded="false" hidden><span aria-hidden="true">☰</span> <?php _e('浏览文档'); ?></button>
         <section class="category-overview" aria-labelledby="category-title">
-            <?php $this->need('partials/breadcrumbs.php'); ?>
             <header class="section-header">
                 <p class="eyebrow"><?php _e('浏览文档'); ?></p>
                 <h1 id="category-title"><?php echo bluedocEscape($blueDocCategory['name']); ?></h1>
@@ -53,5 +50,4 @@ $this->need('header.php');
         </section>
     </main>
 </div>
-<button class="drawer-backdrop" type="button" tabindex="-1" aria-label="<?php _e('关闭文档导航'); ?>" hidden></button>
 <?php $this->need('footer.php'); ?>

@@ -8,11 +8,8 @@ $blueDocUpdated = new \Typecho\Date((int) ($this->modified ?: $this->created));
 $this->need('header.php');
 ?>
 <div class="document-shell">
-    <?php $this->need('partials/document-tree.php'); ?>
     <main id="main" class="site-main document-main" tabindex="-1">
-        <button class="drawer-toggle" type="button" aria-controls="bluedoc-sidebar" aria-expanded="false" hidden><span aria-hidden="true">☰</span> <?php _e('浏览文档'); ?></button>
         <article class="document">
-            <?php $this->need('partials/breadcrumbs.php'); ?>
             <header class="section-header">
                 <h1><?php echo bluedocEscape($this->title); ?></h1>
                 <div class="document-meta">
@@ -23,9 +20,17 @@ $this->need('header.php');
                 </div>
             </header>
             <div class="document-content" data-document-content><?php $this->content(); ?></div>
+            <?php if ($this->is('post')): $blueDocAdjacent = bluedocAdjacentDocuments($blueDocData, (int) $this->cid); ?>
+                <?php if ($blueDocAdjacent['previous'] || $blueDocAdjacent['next']): ?>
+                    <nav class="document-pagination" aria-label="<?php _e('同分类阅读导航'); ?>">
+                        <?php foreach (['previous' => _t('上一篇'), 'next' => _t('下一篇')] as $direction => $label): $document = $blueDocAdjacent[$direction]; ?>
+                            <?php if ($document): ?><a class="document-<?php echo $direction; ?>" data-adjacent-cid="<?php echo $document['cid']; ?>" href="<?php echo bluedocEscape($document['permalink']); ?>"><small><?php echo bluedocEscape($label); ?></small><strong><?php echo bluedocEscape($document['title']); ?></strong></a><?php else: ?><span aria-hidden="true"></span><?php endif; ?>
+                        <?php endforeach; ?>
+                    </nav>
+                <?php endif; ?>
+            <?php endif; ?>
         </article>
     </main>
     <?php $this->need('partials/toc.php'); ?>
 </div>
-<button class="drawer-backdrop" type="button" tabindex="-1" aria-label="<?php _e('关闭文档导航'); ?>" hidden></button>
 <?php $this->need('footer.php'); ?>

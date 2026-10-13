@@ -89,3 +89,43 @@ $data['children'][20] = [11];
 check(array_column(bluedocCategoryDocuments($data, 11), 'cid'), [101, 100], 'Article pool terminates cyclic branches');
 $data['categories'][10]['parent'] = 20;
 check(count(bluedocCategoryPath($data, 20)), 3, 'Corrupt category cycle terminates');
+
+foreach ([null, '', 'bad', '-1', '1.5', '1000000000'] as $invalid) {
+    check(bluedocDocumentOrderValue($invalid), null, 'Invalid or empty reading order ignored: ' . ($invalid ?? 'null'));
+}
+check(bluedocDocumentOrderValue('0'), 0, 'Explicit zero is a valid first order');
+check(bluedocDocumentOrderValue(' 20 '), 20, 'Trimmed native field value');
+check(bluedocDocumentOrderValue('999999999'), 999999999, 'Maximum supported order');
+$reading = [
+    'categories' => [
+        10 => ['mid' => 10, 'parent' => 0, 'posts' => [4]],
+        11 => ['mid' => 11, 'parent' => 10, 'posts' => [1, 2, 3, 5]],
+        12 => ['mid' => 12, 'parent' => 10, 'posts' => [6]],
+    ],
+    'children' => [0 => [10], 10 => [11, 12]],
+    'documents' => [
+        6 => ['cid' => 6, 'created' => 60, 'order' => 0, 'categoryIds' => [12]],
+        5 => ['cid' => 5, 'created' => 50, 'order' => 10, 'categoryIds' => [11]],
+        4 => ['cid' => 4, 'created' => 40, 'order' => 1, 'categoryIds' => [10]],
+        3 => ['cid' => 3, 'created' => 30, 'order' => null, 'categoryIds' => [11]],
+        2 => ['cid' => 2, 'created' => 10, 'order' => 10, 'categoryIds' => [10, 11]],
+        1 => ['cid' => 1, 'created' => 10, 'order' => 0, 'categoryIds' => [11]],
+    ],
+];
+check(array_column(bluedocReadingDocuments($reading, 11), 'cid'), [1, 2, 5, 3], 'Manual order includes zero, chronological tie and unranked tail');
+check(array_column(bluedocCategoryDocuments($reading, 11), 'cid'), [5, 3, 2, 1], 'Latest pool remains independent of reading order');
+check(bluedocAdjacentDocuments($reading, 1)['previous'], null, 'First document has no previous link');
+check(bluedocAdjacentDocuments($reading, 1)['next']['cid'], 2, 'Next document matches category reading sequence');
+check(bluedocAdjacentDocuments($reading, 2)['previous']['cid'], 1, 'Multicategory document uses deepest category');
+check(bluedocAdjacentDocuments($reading, 2)['next']['cid'], 5, 'Adjacent guide does not enter parent or sibling category');
+check(bluedocAdjacentDocuments($reading, 3)['next'], null, 'Last document has no next link');
+check(bluedocAdjacentDocuments($reading, 6), ['previous' => null, 'next' => null], 'Single-document category has no unrelated neighbours');
+check(bluedocAdjacentDocuments($reading, 999), ['previous' => null, 'next' => null], 'Missing/private document cannot gain adjacent metadata');
+check(bluedocStartDocument($reading, '5')['cid'], 5, 'Configured start CID wins');
+check(bluedocStartDocument($reading, '999')['cid'], 1, 'Invalid start CID falls back to first branch reading sequence');
+check(bluedocStartDocument(['categories' => [], 'children' => [], 'documents' => []], null), null, 'Empty site has no fabricated start document');
+$reading['readingMode'] = 'newest';
+check(array_column(bluedocReadingDocuments($reading, 11), 'cid'), [5, 3, 2, 1], 'Newest mode ignores explicit rank and breaks ties by CID');
+check(bluedocAdjacentDocuments($reading, 5)['next']['cid'], 3, 'Adjacent links follow selected newest mode');
+$reading['readingMode'] = 'oldest';
+check(array_column(bluedocReadingDocuments($reading, 11), 'cid'), [1, 2, 3, 5], 'Oldest mode ties follow CID');

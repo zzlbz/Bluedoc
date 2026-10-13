@@ -38,6 +38,18 @@ function bluedocQuickCards(array $data, ?string $configuredParentMid): array
     return $cards;
 }
 
+function bluedocStartDocument(array $data, ?string $configuredCid): ?array
+{
+    $cid = (int) ($configuredCid ?? 0);
+    if (isset($data['documents'][$cid])) return $data['documents'][$cid];
+    foreach ($data['children'][0] ?? [] as $mid) {
+        $documents = bluedocReadingDocuments($data, $mid);
+        if ($documents) return $documents[0];
+    }
+    $documents = bluedocSortDocuments(array_values($data['documents']), $data['readingMode'] ?? 'manual');
+    return $documents[0] ?? null;
+}
+
 /** 代码内 SVG 图标，无外部资源或字体依赖。 */
 function bluedocIcon(string $name): void
 {

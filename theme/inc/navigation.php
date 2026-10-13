@@ -28,6 +28,11 @@ function bluedocDocumentData(): array
     }
     $db = \Typecho\Db::get();
     $options = \Widget\Options::alloc();
+    $data['readingMode'] = (string) ($options->bluedocReadingOrder ?: 'manual');
+    $orderFields = [];
+    foreach ($db->fetchAll($db->select('cid', 'type', 'str_value', 'int_value')->from('table.fields')->where('name = ?', 'bluedocOrder')) as $field) {
+        $orderFields[(int) $field['cid']] = bluedocDocumentOrderValue((string) ($field['type'] === 'int' ? $field['int_value'] : $field['str_value']));
+    }
     $relations = $db->fetchAll($db->select('table.relationships.cid', 'table.relationships.mid')
         ->from('table.relationships')
         ->join('table.contents', 'table.contents.cid = table.relationships.cid')
@@ -64,9 +69,59 @@ function bluedocDocumentData(): array
             'created' => (int) $documents->created,
             'modified' => (int) ($documents->modified ?: $documents->created),
             'categoryIds' => array_column($postCategories, 'mid'),
+            'order' => $orderFields[$cid] ?? null,
         ];
     }
     return $data;
+}
+
+/** 空值和损坏的自定义字段不会意外变成序号零。 */
+function bluedocDocumentOrderValue(?string $value): ?int
+{
+    $value = trim($value ?? '');
+    return preg_match('/^[0-9]{1,9}$/D', $value) ? (int) $value : null;
+}
+
+function bluedocSortDocuments(array $documents, string $mode = 'manual'): array
+{
+    usort($documents, function ($a, $b) use ($mode) {
+        if ($mode === 'manual') {
+            $left = $a['order'] ?? null;
+            $right = $b['order'] ?? null;
+            if ($left !== $right) {
+                if ($left === null) return 1;
+                if ($right === null) return -1;
+                return $left <=> $right;
+            }
+        }
+        $direction = $mode === 'newest' ? -1 : 1;
+        return $direction * (($a['created'] ?? 0) <=> ($b['created'] ?? 0) ?: $a['cid'] <=> $b['cid']);
+    });
+    return $documents;
+}
+
+function bluedocReadingDocuments(array $data, int $mid, bool $includeDescendants = true): array
+{
+    return bluedocSortDocuments(bluedocCategoryDocuments($data, $mid, $includeDescendants), $data['readingMode'] ?? 'manual');
+}
+
+/** 上下篇限定最深所属分类的直接文档，与该分类侧栏顺序一致。 */
+function bluedocAdjacentDocuments(array $data, int $cid): array
+{
+    $result = ['previous' => null, 'next' => null];
+    $document = $data['documents'][$cid] ?? null;
+    if (!$document) return $result;
+    $path = bluedocPrimaryPath($data, $document['categoryIds']);
+    if (!$path) return $result;
+    $documents = bluedocReadingDocuments($data, $path[count($path) - 1]['mid'], false);
+    foreach ($documents as $index => $candidate) {
+        if ($candidate['cid'] === $cid) {
+            $result['previous'] = $documents[$index - 1] ?? null;
+            $result['next'] = $documents[$index + 1] ?? null;
+            break;
+        }
+    }
+    return $result;
 }
 
 /** 根分类到目标分类的路径；防止损坏数据导致无限循环。 */
@@ -211,7 +266,7 @@ function bluedocRenderTree(array $data, int $parent, array $active, int $current
                 <?php bluedocRenderTree($data, $mid, $active, $currentCid, $currentMid, $branchSeen); ?>
                 <?php if ($category['posts']): ?>
                     <ul class="tree-posts">
-                        <?php foreach ($category['posts'] as $cid): $document = $data['documents'][$cid]; ?>
+                        <?php foreach (bluedocReadingDocuments($data, $mid, false) as $document): $cid = $document['cid']; ?>
                             <li><a class="tree-document<?php echo $cid === $currentCid ? ' is-current' : ''; ?>" data-document-cid="<?php echo $cid; ?>" href="<?php echo bluedocEscape($document['permalink']); ?>"<?php echo $cid === $currentCid ? ' aria-current="page"' : ''; ?>><?php echo bluedocEscape($document['title']); ?></a></li>
                         <?php endforeach; ?>
                     </ul>

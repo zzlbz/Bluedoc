@@ -8,11 +8,11 @@ async function read(path) {
     const html = await response.text();
     assert.equal(response.status, 200, `Unexpected status: ${path}`);
     assert(!/Fatal error|Warning:|Deprecated:|Parse error|Uncaught /i.test(html), path);
-    assert(html.includes('name="bluedoc-version" content="0.3.2"'), 'Install and enable V0.3.2 first');
+    assert(html.includes('name="bluedoc-version" content="0.4.0"'), 'Install and enable V0.4.0 first');
     return html;
 }
 const home = await read(base);
-for (const id of ['hero-title', 'hero-search-input', 'quick-title', 'categories-title', 'popular-title']) {
+for (const id of ['hero-title', 'hero-search-input', 'quick-title', 'categories-title', 'directory-title', 'popular-title', 'bluedoc-sidebar', 'bluedoc-color']) {
     assert(home.includes(`id="${id}"`), id);
 }
 assert(!home.includes('data-platform=') && !home.includes('选择你的设备') && !home.includes('is-unavailable'));
@@ -33,10 +33,20 @@ for (const match of home.matchAll(/<article class="quick-card" data-entry-mid="(
     assert(!category.includes('data-document-toc') && !category.includes('<time'));
     const quickCids = [...block.matchAll(/data-quick-cid="(\d+)"/g)].map(item => +item[1]);
     const categoryCids = [...category.matchAll(/data-guide-cid="(\d+)"/g)].map(item => +item[1]);
-    assert.deepEqual(quickCids, categoryCids.slice(0, 3), `MID ${match[1]} latest category documents`);
+    assert(quickCids.length <= 3 && quickCids.every(cid => categoryCids.includes(cid)), `MID ${match[1]} latest public documents belong to category`);
+    assert.equal(new Set(categoryCids).size, categoryCids.length);
     console.log(`PASS MID ${match[1]} category overview, active tree and latest documents`);
 }
 assert(linkedEntries <= 4);
+for (const match of home.matchAll(/<article class="directory-card" data-directory-mid="(\d+)"[\s\S]*?<\/article>/g)) {
+    const block = match[0];
+    const href = block.match(/<h3><a href="([^"]+)"/)[1];
+    const category = await read(decode(href));
+    const listed = [...block.matchAll(/data-directory-cid="(\d+)"/g)].map(m => +m[1]);
+    const full = [...category.matchAll(/data-guide-cid="(\d+)"/g)].map(m => +m[1]);
+    assert.deepEqual(listed, full.slice(0, 6));
+}
+console.log('PASS Home category directories match category reading order');
 if (!linkedEntries) console.log('SKIP Category routing: no actual categories in the selected scope');
 const articleLink = home.match(/data-quick-cid="(\d+)" href="([^"]+)"/) || home.match(/data-popular-cid="(\d+)" href="([^"]+)"/);
 if (articleLink) {

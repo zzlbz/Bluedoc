@@ -4,7 +4,7 @@
  *
  * @package BlueDoc
  * @author BlueDoc
- * @version 0.3.2
+ * @version 0.4.0
  * @link https://github.com/zzlbz/Bluedoc
  */
 if (!defined('__TYPECHO_ROOT_DIR__')) {
@@ -14,6 +14,7 @@ $blueDocData = bluedocDocumentData();
 $blueDocQuick = bluedocQuickCards($blueDocData, $this->options->bluedocQuickParentMid);
 $blueDocCategories = bluedocHomeCategories($blueDocData);
 $blueDocPopular = bluedocPopularDocuments($blueDocData, $this->options->bluedocPopularCids);
+$blueDocStart = bluedocStartDocument($blueDocData, $this->options->bluedocStartCid);
 $this->need('header.php');
 ?>
 <main id="main" class="site-main home-main" tabindex="-1">
@@ -21,7 +22,11 @@ $this->need('header.php');
         <p class="eyebrow"><?php _e('文档与指南'); ?></p>
         <h1 id="hero-title"><?php echo bluedocEscape($this->options->bluedocHomeTitle ?: $this->options->title); ?></h1>
         <p class="hero-description"><?php echo bluedocEscape($this->options->bluedocHomeDescription ?: ($this->options->description ?: _t('查找文档、阅读教程，找到你需要的答案。'))); ?></p>
-        <form class="hero-search" method="get" action="<?php $this->options->siteUrl(); ?>" role="search">
+        <div class="hero-actions">
+            <?php if ($blueDocStart): ?><a class="button-link" data-start-cid="<?php echo $blueDocStart['cid']; ?>" href="<?php echo bluedocEscape($blueDocStart['permalink']); ?>"><?php _e('开始阅读'); ?> <span aria-hidden="true">→</span></a><?php endif; ?>
+            <a class="button-secondary" href="#categories-title"><?php _e('浏览分类'); ?></a>
+        </div>
+        <form class="hero-search" method="get" action="<?php $this->options->siteUrl(); ?>" role="search" aria-label="<?php _e('首页文档搜索'); ?>">
             <span class="search-icon"><?php bluedocIcon('search'); ?></span>
             <label class="sr-only" for="hero-search-input"><?php _e('搜索帮助文档'); ?></label>
             <input id="hero-search-input" name="s" type="search" placeholder="<?php _e('搜索文档、教程或问题…'); ?>" required>
@@ -70,6 +75,23 @@ $this->need('header.php');
                         </ul>
                     <?php endif; ?>
                     <a class="category-card-footer" href="<?php echo bluedocEscape($category['permalink']); ?>"><?php echo bluedocEscape(sprintf(_t('浏览 %d 篇文档'), bluedocCategoryCount($blueDocData, $category['mid']))); ?><span aria-hidden="true">→</span><span class="sr-only">：<?php echo bluedocEscape($category['name']); ?></span></a>
+                </article>
+            <?php endforeach; ?>
+        </div>
+        <?php if (!$blueDocCategories): ?><p class="empty-state"><?php _e('暂无文档分类。'); ?></p><?php endif; ?>
+    </section>
+
+    <section class="home-section" aria-labelledby="directory-title">
+        <div class="home-section-heading"><div><p class="eyebrow"><?php _e('文档手册'); ?></p><h2 id="directory-title"><?php _e('分类文章目录'); ?></h2></div><p><?php _e('按阅读顺序查找文档。'); ?></p></div>
+        <div class="directory-grid">
+            <?php foreach ($blueDocCategories as $card): $category = $card['category']; $documents = bluedocReadingDocuments($blueDocData, $category['mid']); ?>
+                <article class="directory-card" data-directory-mid="<?php echo $category['mid']; ?>">
+                    <h3><a href="<?php echo bluedocEscape($category['permalink']); ?>"><?php echo bluedocEscape($category['name']); ?></a></h3>
+                    <ul class="directory-list">
+                        <?php foreach (array_slice($documents, 0, 6) as $document): ?><li><a data-directory-cid="<?php echo $document['cid']; ?>" href="<?php echo bluedocEscape($document['permalink']); ?>"><?php echo bluedocEscape($document['title']); ?></a></li><?php endforeach; ?>
+                    </ul>
+                    <?php if (!$documents): ?><p class="muted"><?php _e('暂无公开文档'); ?></p><?php endif; ?>
+                    <a class="directory-more" href="<?php echo bluedocEscape($category['permalink']); ?>"><?php echo bluedocEscape(sprintf(_t('浏览全部 %d 篇文档'), count($documents))); ?><span aria-hidden="true"> →</span></a>
                 </article>
             <?php endforeach; ?>
         </div>

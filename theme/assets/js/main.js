@@ -1,4 +1,4 @@
-/* BlueDoc 0.3.0 — 原生分类折叠、移动导航抽屉及正文 H2/H3 目录。 */
+/* BlueDoc 0.4.0 — 配色、导航状态、移动抽屉及阅读辅助。 */
 (() => {
     'use strict';
 
@@ -85,7 +85,7 @@
         const backdrop = document.querySelector('.drawer-backdrop');
         if (!sidebar || !toggle || !close || !backdrop) return;
         const mobile = window.matchMedia('(max-width: 767px)');
-        const outside = [...document.querySelectorAll('.site-header, #main, .site-footer')];
+        const outside = [...document.querySelectorAll('.workspace')];
         let open = false;
         let previousFocus = null;
         const originalInert = new Map();
@@ -159,6 +159,102 @@
         setOpen(false, false);
     }
 
+    function initColorControl() {
+        const select = document.querySelector('#bluedoc-color');
+        if (!select || !document.documentElement.dataset.color) return;
+        select.closest('.color-control').hidden = false;
+        select.value = document.documentElement.dataset.colorPreference || 'system';
+        select.addEventListener('change', () => window.dispatchEvent(new CustomEvent('bluedoc:color', { detail: select.value })));
+    }
+
+    function initTreeMemory() {
+        const tree = document.querySelector('.document-tree');
+        if (!tree) return;
+        const key = 'bluedoc-tree:' + tree.dataset.siteRoot;
+        let saved = {};
+        try {
+            const value = JSON.parse(localStorage.getItem(key) || '{}');
+            if (value && typeof value === 'object' && !Array.isArray(value)) saved = value;
+        } catch { /* 损坏或不可用的存储不阻止原生折叠。 */ }
+        tree.querySelectorAll('details[data-category-mid]').forEach(node => {
+            const id = node.dataset.categoryMid;
+            if (node.classList.contains('is-active-branch')) node.open = true;
+            else if (typeof saved[id] === 'boolean') node.open = saved[id];
+            node.addEventListener('toggle', () => {
+                saved[id] = node.open;
+                try { localStorage.setItem(key, JSON.stringify(saved)); } catch { /* 保持当前页面可操作。 */ }
+            });
+        });
+    }
+
+    function initCopyButtons() {
+        document.querySelectorAll('[data-document-content] pre').forEach(pre => {
+            const code = pre.querySelector('code');
+            if (!code) return;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'code-block';
+            pre.before(wrapper);
+            wrapper.append(pre);
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'code-copy';
+            button.textContent = '复制代码';
+            button.setAttribute('aria-label', '复制此代码块');
+            const status = document.createElement('span');
+            status.className = 'sr-only';
+            status.setAttribute('role', 'status');
+            wrapper.append(button, status);
+            button.addEventListener('click', async () => {
+                button.disabled = true;
+                try {
+                    if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(code.textContent);
+                    else {
+                        const input = document.createElement('textarea');
+                        input.value = code.textContent;
+                        input.className = 'copy-buffer';
+                        document.body.append(input);
+                        input.select();
+                        const copied = document.execCommand('copy');
+                        input.remove();
+                        button.focus();
+                        if (!copied) throw new Error('Copy unavailable');
+                    }
+                    button.textContent = '已复制';
+                    status.textContent = '代码已复制';
+                } catch {
+                    button.textContent = '请手动复制';
+                    status.textContent = '复制失败，请选中代码手动复制';
+                } finally {
+                    button.disabled = false;
+                    setTimeout(() => { button.textContent = '复制代码'; }, 2200);
+                }
+            });
+        });
+    }
+
+    function initCallouts() {
+        const labels = { NOTE: '说明', TIP: '提示', IMPORTANT: '重要', WARNING: '注意', CAUTION: '警告' };
+        document.querySelectorAll('[data-document-content] blockquote').forEach(block => {
+            // HyperDown 可直接输出文本 + br，其他 Markdown 渲染器可能包一层 p。
+            const paragraph = block.firstElementChild?.tagName === 'P' ? block.firstElementChild : block;
+            const text = paragraph.firstChild;
+            if (text?.nodeType !== Node.TEXT_NODE) return;
+            const match = text.nodeValue.match(/^\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*/);
+            if (!match) return;
+            text.nodeValue = text.nodeValue.slice(match[0].length);
+            if (!text.nodeValue && text.nextSibling?.nodeName === 'BR') text.nextSibling.remove();
+            block.classList.add('doc-callout', 'callout-' + match[1].toLowerCase());
+            const title = document.createElement('p');
+            title.className = 'callout-title';
+            title.textContent = labels[match[1]];
+            block.prepend(title);
+        });
+    }
+
+    initColorControl();
+    initTreeMemory();
     initDrawer();
     buildToc();
+    initCopyButtons();
+    initCallouts();
 })();
